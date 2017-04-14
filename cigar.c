@@ -10,13 +10,14 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define N 3                 					// Number of ingredients
+#define N 10                 					// Number of ingredients
 
 pthread_mutex_t agentMutex;           // Only one agent may act each cycle
-pthread_mutex_t pusherMutex[N];      	// Only one pusher may act at a time
+pthread_mutex_t pusherMutex[N];      	// Act as barriers until agents make
+																			// the corresponding ingredient available
 pthread_mutex_t smokerMutex[N];				// Only one smoker may act each cycle.
-
-pthread_cond_t cond_agent, cond_pusher[N], cond_smoker[N]; // Signaling conditions.
+pthread_mutex_t pusherLock;						// Only one pusher may act at a time
+pthread_cond_t cond_pusher[N], cond_smoker[N]; // Signaling conditions.
 
 int ingredients[N]; 								 	// Informs which ingredients are available
 
@@ -26,11 +27,18 @@ void* agentN(void *v);
 void* smokerN(void *v);
 
 int main() {
-  //Initializing ingredients
+  //Initializing ingredients, mutexes and condition variables.
   for (int i = 0; i < N; i++) {
   	ingredients[i] = 0;
-
+	  pthread_cond_init(&cond_pusher[i], 0);
+		pthread_cond_init(&cond_smoker[i], 0);
+		pthread_mutex_init(&pusherMutex[i], 0);
+		pthread_mutex_init(&smokerMutex[i], 0);
   }
+
+	pthread_mutex_init(&pusherLock, 0);
+	pthread_mutex_init(&agentMutex, 0);
+
 
   // Alocating and identifying N threads
   pthread_t agentThread[N], pusherThread[N], smokerThread[N];
@@ -60,8 +68,9 @@ void* agentN(void *v) {
     // The agent that escapes will release all ingredient but one
 		pthread_mutex_lock(&agentMutex);
 
-    int i;
-    for(i = 0; i < N; i++)
+		printf("\n\nAGENT %d\n\n", thisId);
+
+    for(int i = 0; i < N; i++)
       if(i != thisId)
         pthread_cond_signal(&cond_pusher[i]); // Releases the ingredients
 
@@ -76,6 +85,12 @@ void* pusherN(void *v) {
   while(1){
 		pthread_cond_wait(&cond_pusher[thisId], &pusherMutex[thisId]);
 
+		pthread_mutex_lock(&pusherLock);
+
+		// Sets ingredient as available
+		ingredients[thisId] = 1;
+
+		//printf("\n\nPUSHER %d\n\n", thisId);
     int i;
 		int missingIngredient = 0;
 		int amountMissing = 0;
@@ -83,7 +98,7 @@ void* pusherN(void *v) {
 		// Each pusher will check if the information of which ingredient is the one
     // missing is available, for every ingredient
     for(int i = 0; i < N && amountMissing <= 1; i++){
-
+			//printf("\n\ni %d\n\n", amountMissing);
       if (ingredients[i] == 0) {
         missingIngredient = i;
         amountMissing += 1;
@@ -93,19 +108,23 @@ void* pusherN(void *v) {
 
     // If there is only one ingredient missing, the corresponding smoker is
     // signaled.
-	  if (amountMissing <= 1) {
-
+	  if (amountMissing == 1) {
+			//printf("\n\nMISSING %d\n\n", missingIngredient);
       // Resets the ingredients list.
       for(int i = 0; i < N ; i++){
         ingredients[i] = 0;
 
       }
 
+			// Signals to the correct smoker.
+      pthread_cond_signal(&cond_smoker[missingIngredient]);
+
       // Unlocks agentMutex, to allow a new cycle.
 			pthread_mutex_unlock(&agentMutex);
 
     }
 
+		pthread_mutex_unlock(&pusherLock);
 		pthread_mutex_unlock(&pusherMutex[thisId]);
   }
 
