@@ -1,7 +1,7 @@
 CC = gcc
-CFLAGS = -g -pthread
+CFLAGS = -g -pthread -std=c99
 
-PROGRAMS = cigar.c  \
+PROGRAMS = cigar  \
 
 all: $(PROGRAMS)
 
