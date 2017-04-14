@@ -11,7 +11,7 @@
 #define N 5 //number of ingredients
 
 sem_t agentMutex; //only one agent will act every cicle
-sem_t ingredientsMutex[N];  //enables the pusher to that ingredient
+sem_t ingredientsMutex[N];  //enables the user of that ingredient to smoke
 sem_t pushersMutex[N]; //only one pusher will act at a time
 
 int ingredients[N]; //signals if the ingredient N is available
@@ -28,7 +28,7 @@ int main() {
     // Initializing semaphores
     for(int i = 0; i < N; i++){
       sem_init(&ingredientsMutex[i], 0, 0);
-      sem_init(&pushersMutex, 0, 0);
+      sem_init(&pushersMutex[i], 0, 0);
     }
     sem_init(&agentMutex, 0, 1);
 
@@ -54,7 +54,7 @@ int main() {
 void* agentN(void *v) {
   int thisId = *(int *) v;
   while(1){
-    sem_wait(&agentMutex);  //the agent that escapes will realese all ingredient but its one
+    sem_wait(&agentMutex);  //the agent that escapes will release all ingredient but its one
     int i;
     for(i = 0; i < N; i++)
       if(i != thisId)
@@ -69,14 +69,15 @@ void* pusherN(void *v) {
   while(1){
     sem_wait(&pushersMutex[thisId]);    // MELHOR USAR FUTEX
     int i;
+    // every pusher will check if the information of which ingredient is the one missing is available, for every ingredient
     for(int i = 0; i < N; i++){
-      int missingIngredient = 1; //indicates if the ingredient of this thread is the one missing
-      for(int j = 0; j < N; j++){
+      int missingIngredient = 1; //flag that indicates if the ith ingredient is the one missing
+      for(int j = 0; j < N; j++){ //checks if the ith ingredient is the one missing
         if(j != i && ingredients[j] == 0){
           missingIngredient = 0;
         }
-        if(missingIngredient == 1)  //if its the missing ingredient, lets the consumer with this ingredient know it can smok
-          sem_post
+        if(missingIngredient == 1)  //if its the missing ingredient, lets the consumer with this ingredient know it can smoke
+          sem_post(&ingredientsMutex[i]);
       }
     }
   }
