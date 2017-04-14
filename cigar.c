@@ -12,7 +12,7 @@
 
 sem_t agentMutex; //only one agent will act every cicle
 sem_t ingredientsMutex[N];  //enables the pusher to that ingredient
-sem_t pushersMutex; //only one pusher will act at a time
+sem_t pushersMutex[N]; //only one pusher will act at a time
 
 int ingredients[N]; //signals if the ingredient N is available
 
@@ -22,14 +22,15 @@ void* agentN(void *v);
 
 int main() {
     //Initializing ingredients
-    for (i = 0; i < N; i++) {
+    for (int i = 0; i < N; i++)
       ingredients[i] = 0;
-    }
 
     // Initializing semaphores
-    sem_init(&pushersMutex, 0, 0);
+    for(int i = 0; i < N; i++){
+      sem_init(&ingredientsMutex[i], 0, 0);
+      sem_init(&pushersMutex, 0, 0);
+    }
     sem_init(&agentMutex, 0, 1);
-    sem_init(&pushersMutex, 0, 0);
 
     // Alocating and identificating N threads
     pthread_t agentThread[N], pusherThread[N];
@@ -53,11 +54,11 @@ int main() {
 void* agentN(void *v) {
   int thisId = *(int *) v;
   while(1){
-    sem_wait(&agentMutex);
+    sem_wait(&agentMutex);  //the agent that escapes will realese all ingredient but its one
     int i;
     for(i = 0; i < N; i++)
       if(i != thisId)
-        sem_post(&ingredientsMutex[i]);
+        sem_post(&ingredientsMutex[i]); //realeases the ingredients
   }
   return NULL;
 }
@@ -66,17 +67,19 @@ void* pusherN(void *v) {
   int thisId = *(int *) v;
 
   while(1){
-    sem_wait(&ingredientsMutex[thisId]);
-    int missingIngredient = 1; //indicates if the ingredient of this thread is the one missing
+    sem_wait(&pushersMutex[thisId]);    // MELHOR USAR FUTEX
     int i;
-    for(i = 0; i < N; i++)
-      if(i != thisId && ingredients[i] == 0)
-        missingIngredient = 0;
-    if(missingIngredient == 1)
-    else  //if its not the missing one, just signal that it is available and let it go
-      ingredients[thisId] = 1;
-
-
+    for(int i = 0; i < N; i++){
+      int missingIngredient = 1; //indicates if the ingredient of this thread is the one missing
+      for(int j = 0; j < N; j++){
+        if(j != i && ingredients[j] == 0){
+          missingIngredient = 0;
+        }
+        if(missingIngredient == 1)  //if its the missing ingredient, lets the consumer with this ingredient know it can smok
+          sem_post
+      }
+    }
   }
+
   return NULL;
 }
