@@ -10,16 +10,17 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define N 10                 					// Number of ingredients
+#define N 2                 					// Number of ingredients
 
 pthread_mutex_t agentMutex;           // Only one agent may act each cycle
 pthread_mutex_t pusherMutex[N];      	// Act as barriers until agents make
 																			// the corresponding ingredient available
 pthread_mutex_t smokerMutex[N];				// Only one smoker may act each cycle.
 pthread_mutex_t pusherLock;						// Only one pusher may act at a time
-pthread_cond_t cond_pusher[N], cond_smoker[N]; // Signaling conditions.
+pthread_cond_t cond_agent, cond_pusher[N], cond_smoker[N]; // Signaling conditions.
 
 int ingredients[N]; 								 	// Informs which ingredients are available
+int agentActive = 0;
 
 // Thread-related functions
 void* pusherN(void *v);
@@ -67,6 +68,13 @@ void* agentN(void *v) {
   while(1){
     // The agent that escapes will release all ingredient but one
 		pthread_mutex_lock(&agentMutex);
+
+		while (agentActive > 0)
+			pthread_cond_wait(&cond_agent, &agentMutex);
+
+		pthread_mutex_unlock(&agentMutex);
+
+		agentActive += 1;
 
 		printf("\n\nAGENT %d\n\n", thisId);
 
@@ -119,9 +127,6 @@ void* pusherN(void *v) {
 			// Signals to the correct smoker.
       pthread_cond_signal(&cond_smoker[missingIngredient]);
 
-      // Unlocks agentMutex, to allow a new cycle.
-			pthread_mutex_unlock(&agentMutex);
-
     }
 
 		pthread_mutex_unlock(&pusherLock);
@@ -138,6 +143,10 @@ void* smokerN(void *v) {
       pthread_cond_wait(&cond_smoker[thisId], &smokerMutex[thisId]);
 
       printf("\nSmoker %d made cigarrette.\n", thisId);
+
+			// Signals agentMutex, to allow a new cycle.
+			agentActive -= 1;
+			pthread_cond_signal(&cond_agent);
 
 			pthread_mutex_unlock(&smokerMutex[thisId]);
     }
