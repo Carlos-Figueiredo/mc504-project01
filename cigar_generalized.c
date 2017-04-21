@@ -12,13 +12,14 @@
 
 #define N 10                 		// Number of ingredients
 
-sem_t agentMutex;         	// Only one agent may act each cycle
-sem_t pusherMutex[N];     		// Act as barriers until agents make
+sem_t agentMutex;         			// Only one agent may act each cycle
+sem_t pusherMutex[N];     			// Act as barriers until agents make
 									// the corresponding ingredient available
-sem_t smokerMutex[N];			// Only one smoker may act each cycle.
-sem_t pusherLock;			// Only one pusher may act at a time
+sem_t smokerMutex[N];				// Only one smoker may act each cycle.
+sem_t pusherLock;					// Only one pusher may act at a time
 
 int ingredients[N]; 				// Informs which ingredients are available
+int loop_stop = 0;
 
 // Thread-related functions
 void* pusherN(void *v);
@@ -58,19 +59,21 @@ int main() {
 
   	return 0;
 }
-
+	
 void* agentN(void *v) {
 	int thisId = *(int *) v;
 
 	while(1){
    		// The agent that escapes will release all ingredients but one
 		sem_wait(&agentMutex);
-
+		//printf("AGENTE: %d\n", thisId);
     	for(int i = 0; i < N; i++)
 		  if(i != thisId)
 		    sem_post(&pusherMutex[i]); // Releases the ingredients
 
-
+		// Signals agentMutex, to allow a new cycle.
+		sem_post(&agentMutex);
+		//sleep(3);
 	}
  	return NULL;
 }
@@ -83,33 +86,41 @@ void* pusherN(void *v) {
 
 		sem_wait(&pusherLock);
 
-		// Sets ingredient as available
-		ingredients[thisId] = 1;
-
-		int missingIngredient = 0;
-		int amountMissing = 0;
-
+		ingredients[thisId]++;
+		
 		// Each pusher will check if the information of which ingredient is the one
 		// missing is available, for every ingredient
-		for(int i = 0; i < N && amountMissing <= 1; i++){
-	 		if (ingredients[i] == 0) {
-	    		missingIngredient = i;
-	    		amountMissing += 1;
+		int index_minimum = 0;
+		int amount_zeros = 0;
+		
+		int i = loop_stop;
+		do {
+			if (ingredients[i] == 0) {
+				amount_zeros++;
 	  		}
+		
+			if (ingredients[i] < ingredients[index_minimum] ) {
+				index_minimum = i;
+			
+			}
+			
+			i = (i+1)%N;
+			
+		} while ( i != loop_stop );
 
-		}
+		loop_stop = (index_minimum + 1)%N;
 
-		// If there is only one ingredient missing, the corresponding smoker is
+		// If , the corresponding smoker is
 		// signaled.
-	  	if (amountMissing == 1) {
+	  	if (amount_zeros <= 1) {
 	  		// Resets the ingredients list.
-		  	for(int i = 0; i < N ; i++){
-				ingredients[i] = 0;
+		  	for(i = 0; i < N ; i++){
+				ingredients[i]--;
 
 		  	}
-
+			ingredients[index_minimum]++;
 			// Signals to the correct smoker.
-		 	sem_post(&smokerMutex[missingIngredient]);
+		 	sem_post(&smokerMutex[index_minimum]);
 
 		}
 
@@ -127,8 +138,6 @@ void* smokerN(void *v) {
 
      	printf("\nSmoker %d made cigarrette.\n", thisId);
 		
-		// Signals agentMutex, to allow a new cycle.
-		sem_post(&agentMutex);
     }
 
 }
