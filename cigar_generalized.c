@@ -12,14 +12,16 @@
 
 #define N 10                 		// Number of ingredients
 
-sem_t agentMutex;         			// Only one agent may act each cycle
+pthread_mutex_t agentMutex;         // Only one agent may act each cycle
 sem_t pusherMutex[N];     			// Act as barriers until agents make
 									// the corresponding ingredient available
 sem_t smokerMutex[N];				// Only one smoker may act each cycle.
 sem_t pusherLock;					// Only one pusher may act at a time
+pthread_cond_t condAgent;
 
 int ingredients[N]; 				// Informs which ingredients are available
 int loop_stop = 0;
+int agentActive = 0;
 
 // Thread-related functions
 void* pusherN(void *v);
@@ -29,7 +31,8 @@ void* smokerN(void *v);
 int main() {
 	//Initializing ingredients and semaphores.
 	sem_init(&pusherLock, 0, 1);
-	sem_init(&agentMutex, 0, 1);
+	pthread_mutex_init(&agentMutex, 0);
+	pthread_cond_init(&condAgent, 0);
 
 	for (int i = 0; i < N; i++) {
 	  	ingredients[i] = 0;
@@ -65,14 +68,21 @@ void* agentN(void *v) {
 
 	while(1){
    		// The agent that escapes will release all ingredients but one
-		sem_wait(&agentMutex);
-		//printf("AGENTE: %d\n", thisId);
+		pthread_mutex_lock(&agentMutex);
+		
+		while (agentActive > 0)
+			pthread_cond_wait(&condAgent, &agentMutex);
+		
+		agentActive++;
+		//printf("AGENT: %d\n", thisId);
     	for(int i = 0; i < N; i++)
 		  if(i != thisId)
 		    sem_post(&pusherMutex[i]); // Releases the ingredients
 
 		// Signals agentMutex, to allow a new cycle.
-		sem_post(&agentMutex);
+		agentActive--;
+		pthread_cond_signal(&condAgent);
+		pthread_mutex_unlock(&agentMutex);
 		//sleep(3);
 	}
  	return NULL;
