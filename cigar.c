@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define N 2                 		// Number of ingredients
+#define N 10                 		// Number of ingredients
 
 pthread_mutex_t agentMutex;         // Only one agent may act each cycle
 pthread_mutex_t pusherMutex[N];     // Act as barriers until agents make
@@ -38,7 +38,6 @@ int main() {
 
 	pthread_mutex_init(&pusherLock, 0);
 	pthread_mutex_init(&agentMutex, 0);
-
 
 	// Alocating and identifying N threads
 	pthread_t agentThread[N], pusherThread[N], smokerThread[N];
@@ -90,7 +89,7 @@ void* pusherN(void *v) {
 		// Sets ingredient as available
 		ingredients[thisId] = 1;
 
-		//printf("\n\nPUSHER %d\n\n", thisId);
+		printf("\n\nPUSHER %d\n\n", thisId);
 		int missingIngredient = 0;
 		int amountMissing = 0;
 
@@ -135,10 +134,10 @@ void* smokerN(void *v) {
 
      	 printf("\nSmoker %d made cigarrette.\n", thisId);
 
+		pthread_mutex_unlock(&smokerMutex[thisId]);
+		
 		// Signals agentMutex, to allow a new cycle.
 		pthread_mutex_unlock(&agentMutex);
-
-		pthread_mutex_unlock(&smokerMutex[thisId]);
     }
 
 }
