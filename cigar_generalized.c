@@ -30,7 +30,7 @@ int loop_stop = 0;					// Informs the stopping point in the loop
 
 int agentActive = 0;				// Condition that grants that only one
 									// agent may act at a time.
-int lastId = N;						// Informs the last active agent, to avoid
+int lastId = -1;						// Informs the last active agent, to avoid
  									// one agent being able to run multiple
 									// times through AgentN(void *v).
 
@@ -82,29 +82,34 @@ void* agentN(void *v) {
 
 	while(1){
 
-		while ( lastId == thisId )
-			pthread_cond_signal(&condAgent);
+        while (lastId == thisId)
+            pthread_cond_signal(&condAgent);
 
-   		// The agent that escapes will release all ingredients but one
-		pthread_mutex_lock(&agentMutex);
+        while (__sync_bool_compare_and_swap(&agentActive, 0, 1) == 0)
+            pthread_cond_wait(&condAgent, &agentMutex);
 
-		while (agentActive > 0)
-        	pthread_cond_wait(&condAgent, &agentMutex);
+        lastId = thisId;
 
-		lastId = thisId;
+        sem_wait(&ingredientLock);
 
-		agentActive++;
-		//printf("AGENT: %d\n", thisId);
-    	for(int i = 0; i < N; i++)
-		  if(i != thisId)
-		    sem_post(&pusherMutex[i]); // Releases the ingredients
+        int i;
 
-		// Signals agentMutex, to allow a new cycle.
-		agentActive--;
-		pthread_cond_signal(&condAgent);
-		pthread_mutex_unlock(&agentMutex);
-		//sleep(1);
-	}
+        prints_agent(thisId, ingredients);
+        sleep(1);
+
+        sem_post(&ingredientLock);
+
+        //printf("AGENT: %d\n", thisId);
+        for(int i = 0; i < N; i++)
+          if(i != thisId){
+            sem_post(&pusherMutex[i]); // Releases the ingredients
+            printf("%d a\n", thisId);
+        }
+
+        // Signals agentMutex, to allow a new cycle.
+        agentActive--;
+        //sleep(1);
+    }
  	return NULL;
 }
 
@@ -156,7 +161,6 @@ void* pusherN(void *v) {
 	  		// Updates the ingredients list.
 		  	for(i = 0; i < N ; i++){
 				ingredients[i]--;
-
 		  	}
 			ingredients[index_minimum]++;
 
