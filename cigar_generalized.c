@@ -22,6 +22,7 @@ pthread_cond_t condAgent;
 int ingredients[N]; 				// Informs which ingredients are available
 int loop_stop = 0;
 int agentActive = 0;
+int lastId = N;
 
 // Thread-related functions
 void* pusherN(void *v);
@@ -41,7 +42,7 @@ int main() {
 
 	}
 
-	
+
 	// Alocating and identifying N threads
 	pthread_t agentThread[N], pusherThread[N], smokerThread[N];
 	int i, id[N];
@@ -62,17 +63,23 @@ int main() {
 
   	return 0;
 }
-	
+
 void* agentN(void *v) {
 	int thisId = *(int *) v;
 
 	while(1){
+
+		while ( lastId == thisId )
+			pthread_cond_signal(&condAgent);
+
    		// The agent that escapes will release all ingredients but one
 		pthread_mutex_lock(&agentMutex);
-		
+
 		while (agentActive > 0)
-			pthread_cond_wait(&condAgent, &agentMutex);
-		
+        	pthread_cond_wait(&condAgent, &agentMutex);
+
+		lastId = thisId;
+
 		agentActive++;
 		//printf("AGENT: %d\n", thisId);
     	for(int i = 0; i < N; i++)
@@ -83,7 +90,7 @@ void* agentN(void *v) {
 		agentActive--;
 		pthread_cond_signal(&condAgent);
 		pthread_mutex_unlock(&agentMutex);
-		//sleep(3);
+		//sleep(1);
 	}
  	return NULL;
 }
@@ -97,25 +104,25 @@ void* pusherN(void *v) {
 		sem_wait(&pusherLock);
 
 		ingredients[thisId]++;
-		
+
 		// Each pusher will check if the information of which ingredient is the one
 		// missing is available, for every ingredient
 		int index_minimum = 0;
 		int amount_zeros = 0;
-		
+
 		int i = loop_stop;
 		do {
 			if (ingredients[i] == 0) {
 				amount_zeros++;
 	  		}
-		
+
 			if (ingredients[i] < ingredients[index_minimum] ) {
 				index_minimum = i;
-			
+
 			}
-			
+
 			i = (i+1)%N;
-			
+
 		} while ( i != loop_stop );
 
 		loop_stop = (index_minimum + 1)%N;
@@ -147,7 +154,7 @@ void* smokerN(void *v) {
      	sem_wait(&smokerMutex[thisId]);
 
      	printf("\nSmoker %d made cigarrette.\n", thisId);
-		
+
     }
 
 }
