@@ -12,6 +12,7 @@
 #include "ascii_animation.h"
 
 #define N 10                 		// Number of ingredients
+#define SLEEP_PRESENTATION 3		// Sleep duration for presentation.
 
 pthread_mutex_t agentMutex;         // Grants mutual exclusion while modifying
 									// pusherMutex[N].
@@ -103,7 +104,7 @@ void* agentN(void *v) {
 		int i;
 
      	prints_agent(thisId, ingredients);
-		sleep(1);
+		sleep(SLEEP_PRESENTATION);
 
 		sem_post(&ingredientLock);
 
@@ -203,7 +204,7 @@ void* smokerN(void *v) {
 		sem_wait(&ingredientLock);
 
      	prints_smoker(thisId, ingredients_copy);
-		sleep(1);
+		sleep(SLEEP_PRESENTATION);
 
 		sem_post(&ingredientLock);
 

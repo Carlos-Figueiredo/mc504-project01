@@ -12,6 +12,7 @@
 #include "ascii_animation.h"
 
 #define N 5                 	// Number of ingredients
+#define SLEEP_PRESENTATION 3
 
 sem_t agentMutex;         		// Only one agent may act in each cycle.
 sem_t pusherMutex[N];     		// Semaphores for pushers.
@@ -77,7 +78,7 @@ void* agentN(void *v) {
 		sem_wait(&ingredientLock);
 
      	prints_agent(thisId, ingredients);
-		sleep(1);
+		sleep(SLEEP_PRESENTATION);
 
 		sem_post(&ingredientLock);
 
@@ -149,7 +150,7 @@ void* smokerN(void *v) {
 
 		sem_wait(&ingredientLock);
 
-		sleep(1);
+		sleep(SLEEP_PRESENTATION);
 
      	prints_smoker(thisId, ingredients);
 
