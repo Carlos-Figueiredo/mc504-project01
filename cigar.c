@@ -1,6 +1,6 @@
 /*
   Wasp.
-  This code solves the Generalized Cigarette smokers problem for N threads. It
+  This code solves the non-Generalized Cigarette smokers problem for N threads. It
   was based on the solution for 3 threads, presented in the "Little Book Of
   Semaphores", by Allen B. Downey.
  */
@@ -10,15 +10,16 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define N 10                 		// Number of ingredients
+#define N 10                 	// Number of ingredients
 
-sem_t agentMutex;         	// Only one agent may act each cycle
-sem_t pusherMutex[N];     		// Act as barriers until agents make
-									// the corresponding ingredient available
-sem_t smokerMutex[N];			// Only one smoker may act each cycle.
-sem_t pusherLock;			// Only one pusher may act at a time
+sem_t agentMutex;         		// Only one agent may act in each cycle.
+sem_t pusherMutex[N];     		// Semaphores for pushers.
 
-int ingredients[N]; 				// Informs which ingredients are available
+sem_t smokerMutex[N];			// Semaphores for smokers.
+sem_t pusherLock;				// Grants that only one pusher may act at
+								// a time.
+
+int ingredients[N]; 			// Informs which ingredients are available.
 
 // Thread-related functions
 void* pusherN(void *v);
@@ -37,7 +38,7 @@ int main() {
 
 	}
 
-	
+
 	// Alocating and identifying N threads
 	pthread_t agentThread[N], pusherThread[N], smokerThread[N];
 	int i, id[N];
@@ -59,6 +60,10 @@ int main() {
   	return 0;
 }
 
+/* Agent function. Manages the pushers by signaling all of them except the
+/* one with the same id as the active agent.
+/* Parameter: Pointer to the thread's id.
+*/
 void* agentN(void *v) {
 	int thisId = *(int *) v;
 
@@ -75,6 +80,10 @@ void* agentN(void *v) {
  	return NULL;
 }
 
+/* Pusher function. Each pusher will check if it is possible for any of the
+/* smokers to complete a cigarette.
+/* Parameter: Pointer to the thread's id.
+*/
 void* pusherN(void *v) {
 	int thisId = *(int *) v;
 
@@ -89,8 +98,9 @@ void* pusherN(void *v) {
 		int missingIngredient = 0;
 		int amountMissing = 0;
 
-		// Each pusher will check if the information of which ingredient is the one
-		// missing is available, for every ingredient
+		// Each pusher will check if it is possible for any of the smokers to
+		// complete a cigarette. If so, signals the corresponding smokerMutex
+		// and resets all ingredients to zero.
 		for(int i = 0; i < N && amountMissing <= 1; i++){
 	 		if (ingredients[i] == 0) {
 	    		missingIngredient = i;
@@ -119,6 +129,9 @@ void* pusherN(void *v) {
 	return NULL;
 }
 
+/* Smoker function. Prints the id of the smoker that completed a cigarette.
+/* Parameter: Pointer to the thread's id.
+*/
 void* smokerN(void *v) {
     int thisId = *(int *) v;
 
@@ -126,7 +139,7 @@ void* smokerN(void *v) {
      	sem_wait(&smokerMutex[thisId]);
 
      	printf("\nSmoker %d made cigarrette.\n", thisId);
-		
+
 		// Signals agentMutex, to allow a new cycle.
 		sem_post(&agentMutex);
     }
