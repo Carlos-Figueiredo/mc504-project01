@@ -9,15 +9,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "ascii_animation.h"
 
-#define N 10                 	// Number of ingredients
+#define N 5                 	// Number of ingredients
 
 sem_t agentMutex;         		// Only one agent may act in each cycle.
 sem_t pusherMutex[N];     		// Semaphores for pushers.
 
 sem_t smokerMutex[N];			// Semaphores for smokers.
-sem_t pusherLock;				// Grants that only one pusher may act at
-								// a time.
+sem_t ingredientLock;			// Semaphore for ingredients.
 sem_t printMutex;         		// Semaphore for output control.
 
 int ingredients[N]; 			// Informs which ingredients are available.
@@ -29,9 +29,8 @@ void* smokerN(void *v);
 
 int main() {
 	//Initializing ingredients and semaphores.
-	sem_init(&pusherLock, 0, 1);
+	sem_init(&ingredientLock, 0, 1);
 	sem_init(&agentMutex, 0, 1);
-	sem_init(&printMutex, 0, 1);
 
 	for (int i = 0; i < N; i++) {
 	  	ingredients[i] = 0;
@@ -40,6 +39,8 @@ int main() {
 
 	}
 
+	// Setup function for animations.
+	thread_setup(N);
 
 	// Alocating and identifying N threads
 	pthread_t agentThread[N], pusherThread[N], smokerThread[N];
@@ -63,8 +64,8 @@ int main() {
 }
 
 /* Agent function. Manages the pushers by signaling all of them except the
-/* one with the same id as the active agent.
-/* Parameter: Pointer to the thread's id.
+ * one with the same id as the active agent.
+ * Parameter: Pointer to the thread's id.
 */
 void* agentN(void *v) {
 	int thisId = *(int *) v;
@@ -73,11 +74,12 @@ void* agentN(void *v) {
    		// The agent that escapes will release all ingredients but one
 		sem_wait(&agentMutex);
 
-		sem_wait(&printLock);
+		sem_wait(&ingredientLock);
 
+     	prints_agent(thisId, ingredients);
 		sleep(1);
 
-		sem_post(&printLock);
+		sem_post(&ingredientLock);
 
     	for(int i = 0; i < N; i++)
 		  if(i != thisId)
@@ -88,8 +90,8 @@ void* agentN(void *v) {
 }
 
 /* Pusher function. Each pusher will check if it is possible for any of the
-/* smokers to complete a cigarette.
-/* Parameter: Pointer to the thread's id.
+ * smokers to complete a cigarette.
+ * Parameter: Pointer to the thread's id.
 */
 void* pusherN(void *v) {
 	int thisId = *(int *) v;
@@ -97,7 +99,7 @@ void* pusherN(void *v) {
   	while(1){
 		sem_wait(&pusherMutex[thisId]);
 
-		sem_wait(&pusherLock);
+		sem_wait(&ingredientLock);
 
 		// Sets ingredient as available
 		ingredients[thisId] = 1;
@@ -130,14 +132,14 @@ void* pusherN(void *v) {
 
 		}
 
-		sem_post(&pusherLock);
+		sem_post(&ingredientLock);
   	}
 
 	return NULL;
 }
 
 /* Smoker function. Prints the id of the smoker that completed a cigarette.
-/* Parameter: Pointer to the thread's id.
+ * Parameter: Pointer to the thread's id.
 */
 void* smokerN(void *v) {
     int thisId = *(int *) v;
@@ -145,13 +147,13 @@ void* smokerN(void *v) {
     while(1){
      	sem_wait(&smokerMutex[thisId]);
 
-		sem_wait(&printLock);
+		sem_wait(&ingredientLock);
 
 		sleep(1);
 
-     	printf("\nSmoker %d made cigarrette.\n", thisId);
+     	prints_smoker(thisId, ingredients);
 
-		sem_post(&printLock);
+		sem_post(&ingredientLock);
 
 		// Signals agentMutex, to allow a new cycle.
 		sem_post(&agentMutex);

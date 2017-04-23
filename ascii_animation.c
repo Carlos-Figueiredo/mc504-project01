@@ -8,49 +8,138 @@
   that serve the food and the smokers are represented by the people eating it.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include "ascii_animation.h"
 
-int N = 0;
+void prints_ingredients(int* ingredients);
 
-void setup(int n) {
+int N;
 
-	N = n;
+/* Setup function. Sets the number of threads used.
+ * Parameter: Number (int) of threads.
+*/
+void thread_setup(int number) {
 
-}
-
-void prints_agent(int id) {
-
-
+	N = number;
 
 }
 
-void prints_smoker(int id) {
+/* Prints agent function. Animates the action of an agent.
+ * Parameter: Thread's id (int) and pointer to array of ingredients (int*).
+*/
+void prints_agent(int id, int *ingredients) {
 
-	printf("				  ,-.,~~.\n");
-	printf("				,'///||\\\\`.\n");
-	printf("			   ///(((||)))\\\\.\n");
-	printf("			  (((         )))\n");
-	printf("			  _))) o` ´o  |(_\n");
-	printf("			 ._//\\   _   /\\\\_.\n");
-	printf("			 `-'_/`-._.-'\\-`-'\n");
-	printf("			  _' \\/=._.=\\/ __\n");
-	printf("			 / (           ) \\\n");
-	printf("			/__|           |__\\\n");
-	printf("			| ||           || |\n");
-	printf("			 \\_|           (_/\n");
-	printf("			   |           |\n");
-	printf("			   (_ __  __ __)\n");
+	printf("\033[2J"); // Clear screen
+
+	// Prints agent.
+	printf("                                 ____________\n");
+	printf("                                /    %2d     /\n", id);
+	printf("                  ,-.,~~.      / _________/\n");
+	printf("                ,'///||\\\\`.   /_/\n");
+	printf("               ///(((||)))\\\\.\n");
+	printf("              (((         )))\n");
+	printf("              _))) o` ´o  |(_\n");
+	printf("             ._//\\   _   /\\\\_.\n");
+	printf("             `-'_/`-._.-'\\-`-'           ___\n");
+	printf("              _' \\/=._.=\\/ _____ _______/ _/_\n");
+	printf("             / (           )__ _/______/ /__/\n");
+	printf("            /__|           |          / /\n");
+	printf("            | ||           |      ___/ /\n");
+	printf("             \\_|           (      \\____/\n");
+	printf("               |           |\n");
+	printf("               (_ __  __ __)\n");
 	printf("\n");
-	printf("					)  )\n");
-	printf("				______(____\n");
-	printf("			   (___________)\n");
-	printf("				/         \\\n");
-	printf("			   /           \\\n");
-	printf("			  |             |\n");
-	printf("			  \\             /\n");
-	printf("			   '._________.'\n");
+	printf("                   )  )\n");
+	printf("                ______(____\n");
+	printf("               (___________)\n");
+	printf("                /         \\\n");
+	printf("               /           \\\n");
+	printf("              |             |\n");
+	printf("              \\             /\n");
+	printf("               '._________.'\n");
 
+	prints_ingredients(ingredients);
+
+	int i;
+
+	// Prints smokers
+
+	printf("\n\n\n\n");
+	for(i = 0; i < N; i++)
+		printf("  _______     ");
+
+	printf("\n");
+
+	for(i = 0; i < N; i++)
+		printf(" ((/---\\))    ");
+
+	printf("\n");
+
+	for(i = 0; i < N; i++)
+		printf("/()o` ´o()\\\\  ");
+
+	printf("\n");
+
+	for(i = 0; i < N; i++)
+		printf(") \\__c__/ (   ");
+
+	printf("\n");
+
+	for(i = 0; i < N; i++)
+		printf("   /   \\      ");
+
+	printf("\n");
+
+	for(i = 0; i < N; i++)
+		printf("__||___||__   ");
+
+	printf("\n");
+
+	for(i = 0; i < N; i++)
+		printf("\\ ~~ %.2d ~~ \\  ", i);
+
+	printf("\n");
+
+	for(i = 0; i < N; i++)
+		printf(" \\__________\\ ");
+
+	printf("\n");
+
+
+}
+
+/* Prints smoker function. Animates the action of a smoker.
+ * Parameter: Thread's id (int) and pointer to array of ingredients (int*).
+*/
+void prints_smoker(int id, int *ingredients) {
+
+	printf("\033[2J"); // Clear screen
+
+	printf("                  ,-.,~~.\n");
+	printf("                ,'///||\\\\`.\n");
+	printf("               ///(((||)))\\\\.\n");
+	printf("              (((         )))\n");
+	printf("              _))) o` ´o  |(_\n");
+	printf("             ._//\\   _   /\\\\_.\n");
+	printf("             `-'_/`-._.-'\\-`-'\n");
+	printf("             _' \\/=._.=\\/ __\n");
+	printf("             / (           ) \\\n");
+	printf("            /__|           |__\\\n");
+	printf("            | ||           || |\n");
+	printf("            \\_|           (_/\n");
+	printf("               |           |\n");
+	printf("               (_ __  __ __)\n");
+	printf("\n");
+	printf("                    )  )\n");
+	printf("                ______(____\n");
+	printf("               (___________)\n");
+	printf("                /         \\\n");
+	printf("               /           \\\n");
+	printf("              |             |\n");
+	printf("              \\             /\n");
+	printf("               '._________.'\n");
+
+
+	prints_ingredients(ingredients);
 
 	int i;
 
@@ -117,7 +206,7 @@ void prints_smoker(int id) {
 	printf("\n");
 
 	for(i = 0; i < N; i++)
-		printf("\\ ~~ %2d ~~ \\ ", i);
+		printf("\\ ~~ %.2d ~~ \\ ", i);
 
 	printf("\n");
 
@@ -128,16 +217,20 @@ void prints_smoker(int id) {
 
 }
 
-void prints_ingredients(int *ingredients) {
+/* Prints ingredients function. Auxiliar function that nimates the amount of
+ * ingredients.
+ * Parameter: Pointer to array of ingredients (int*).
+*/
+void prints_ingredients(int* ingredients) {
 
 	int i;
 	for(i = 0; i < N ;i++)
-		printf(" ______ ");
+		printf(" ______  ");
 
 	printf("\n");
 
 	for(i = 0; i < N ;i++)
-		printf("|  %2d  | ", ingredients[i]);
+		printf("|  %.2d  | ", ingredients[i]);
 
 	printf("\n");
 
@@ -153,7 +246,7 @@ void prints_ingredients(int *ingredients) {
 	printf("\n");
 
 	for(i = 0; i < N ;i++)
-		printf("---%2d--- ", i);
+		printf("   %.2d    ", i);
 
 	printf("\n");
 

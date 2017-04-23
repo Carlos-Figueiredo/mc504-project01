@@ -116,6 +116,7 @@ void* pusherN(void *v) {
 	int thisId = *(int *) v;
 
   	while(1){
+		
 		// Waits for the signal sent by the agents.
 		sem_wait(&pusherMutex[thisId]);
 
