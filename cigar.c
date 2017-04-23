@@ -61,8 +61,8 @@ int main() {
 }
 
 /* Agent function. Manages the pushers by signaling all of them except the
-/* one with the same id as the active agent.
-/* Parameter: Pointer to the thread's id.
+ * one with the same id as the active agent.
+ * Parameter: Pointer to the thread's id.
 */
 void* agentN(void *v) {
 	int thisId = *(int *) v;
@@ -81,8 +81,8 @@ void* agentN(void *v) {
 }
 
 /* Pusher function. Each pusher will check if it is possible for any of the
-/* smokers to complete a cigarette.
-/* Parameter: Pointer to the thread's id.
+ * smokers to complete a cigarette.
+ * Parameter: Pointer to the thread's id.
 */
 void* pusherN(void *v) {
 	int thisId = *(int *) v;
@@ -130,7 +130,7 @@ void* pusherN(void *v) {
 }
 
 /* Smoker function. Prints the id of the smoker that completed a cigarette.
-/* Parameter: Pointer to the thread's id.
+ * Parameter: Pointer to the thread's id.
 */
 void* smokerN(void *v) {
     int thisId = *(int *) v;

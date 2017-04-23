@@ -11,6 +11,7 @@
 #include "ascii_animation.h"
 
 void prints_ingredients(int* ingredients);
+void prints_title();
 
 int N;
 
@@ -30,6 +31,8 @@ void prints_agent(int id, int *ingredients) {
 
 	printf("\033[2J"); // Clear screen
 
+	prints_title();
+
 	// Prints agent.
 	printf("                                 ____________\n");
 	printf("                                /    %2d     /\n", id);
@@ -48,7 +51,7 @@ void prints_agent(int id, int *ingredients) {
 	printf("               |           |\n");
 	printf("               (_ __  __ __)\n");
 	printf("\n");
-	printf("                   )  )\n");
+	printf("                    )  )\n");
 	printf("                ______(____\n");
 	printf("               (___________)\n");
 	printf("                /         \\\n");
@@ -75,7 +78,7 @@ void prints_agent(int id, int *ingredients) {
 	printf("\n");
 
 	for(i = 0; i < N; i++)
-		printf("/()o` ´o()\\\\  ");
+		printf("/()o` ´o()\\   ");
 
 	printf("\n");
 
@@ -114,6 +117,9 @@ void prints_smoker(int id, int *ingredients) {
 
 	printf("\033[2J"); // Clear screen
 
+	prints_title();
+	printf("\n\n"); // Alignment correction.
+
 	printf("                  ,-.,~~.\n");
 	printf("                ,'///||\\\\`.\n");
 	printf("               ///(((||)))\\\\.\n");
@@ -121,11 +127,11 @@ void prints_smoker(int id, int *ingredients) {
 	printf("              _))) o` ´o  |(_\n");
 	printf("             ._//\\   _   /\\\\_.\n");
 	printf("             `-'_/`-._.-'\\-`-'\n");
-	printf("             _' \\/=._.=\\/ __\n");
+	printf("              _' \\/=._.=\\/ __\n");
 	printf("             / (           ) \\\n");
 	printf("            /__|           |__\\\n");
 	printf("            | ||           || |\n");
-	printf("            \\_|           (_/\n");
+	printf("             \\_|           (_/\n");
 	printf("               |           |\n");
 	printf("               (_ __  __ __)\n");
 	printf("\n");
@@ -145,28 +151,28 @@ void prints_smoker(int id, int *ingredients) {
 
 	// Prints chat box.
 	for(i = 0; i < id; i++)
-		printf("          ");
+		printf("              ");
 
-	printf("__________");
+	printf("_____________");
 
 	printf("\n");
 
 	for(i = 0; i < id; i++)
-		printf("          ");
+		printf("              ");
 
 	printf("\\  PRONTO!  /");
 
 	printf("\n");
 
 	for(i = 0; i < id; i++)
-		printf("          ");
+		printf("              ");
 
 	printf(" \\___  ____/ ");
 
 	printf("\n");
 
 	for(i = 0; i < id; i++)
-		printf("          ");
+		printf("              ");
 
 	printf("     \\/      ");
 
@@ -176,42 +182,42 @@ void prints_smoker(int id, int *ingredients) {
 	// Prints smokers
 
 	for(i = 0; i < N; i++)
-		printf("  _______    ");
+		printf("  _______     ");
 
 	printf("\n");
 
 	for(i = 0; i < N; i++)
-		printf(" ((/---\\))   ");
+		printf(" ((/---\\))    ");
 
 	printf("\n");
 
 	for(i = 0; i < N; i++)
-		printf("/()o` ´o()\\\\  ");
+		printf("/()o` ´o()\\   ");
 
 	printf("\n");
 
 	for(i = 0; i < N; i++)
-		printf(") \\__c__/ (  ");
+		printf(") \\__c__/ (   ");
 
 	printf("\n");
 
 	for(i = 0; i < N; i++)
-		printf("   /   \\     ");
+		printf("   /   \\      ");
 
 	printf("\n");
 
 	for(i = 0; i < N; i++)
-		printf("__||___||__  ");
+		printf("__||___||__   ");
 
 	printf("\n");
 
 	for(i = 0; i < N; i++)
-		printf("\\ ~~ %.2d ~~ \\ ", i);
+		printf("\\ ~~ %.2d ~~ \\  ", i);
 
 	printf("\n");
 
 	for(i = 0; i < N; i++)
-		printf(" \\__________\\");
+		printf(" \\__________\\ ");
 
 	printf("\n");
 
@@ -249,5 +255,19 @@ void prints_ingredients(int* ingredients) {
 		printf("   %.2d    ", i);
 
 	printf("\n");
+
+}
+
+
+void prints_title() {
+
+	printf("                                  _\n");
+	printf("_________                 __     | |          _  _   __          __\n");
+	printf("\\_   ___ \\   ___________ |__| ___| | ____    / \\/ \\ |__| ______ |  |_   ____\n");
+	printf(" \\   \\  \\/  /  _ \\___   /|  |/  _  |/  _ \\  |      ||  |/  ___/|    _| /  _ \\\n");
+	printf("  \\   \\____(  (_) )/   / |  || |_| (  (_) ) | |\\/| ||  |\\___ \\  |  |_ (  (_) )\n");
+	printf("   \\_______\\\\____//_____\\|__||_____|\\____/  |_|  |_||__|/____/   \\___| \\____/\n");
+	printf("\n\n\n");
+
 
 }
